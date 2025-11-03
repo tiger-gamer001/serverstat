@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>وضعیت سرور</title>
+    <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Vazirmatn-Bold';
+            src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-Bold.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.light-theme {
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .status-card {
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #0f3460;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        body.light-theme .status-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e6ed;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            text-align: center;
+            color: #e94560;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-family: 'Vazirmatn-Bold', sans-serif;
+            transition: color 0.3s ease;
+        }
+
+        body.light-theme h1 {
+            color: #d32f2f;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #0f3460;
+            transition: border-color 0.3s ease;
+        }
+
+        body.light-theme .info-row {
+            border-bottom: 1px solid #ebf0f5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: bold;
+            font-size: 1.1rem;
+            font-family: 'Vazirmatn-Bold', sans-serif;
+        }
+
+        .value {
+            font-size: 1.1rem;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .status-online {
+            color: #32de84;
+            font-weight: bold;
+        }
+
+        body.light-theme .status-online {
+            color: #28a745;
+        }
+
+        .status-offline {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        body.light-theme .status-offline {
+            color: #dc3545;
+        }
+
+        #player-list {
+            margin-top: 20px;
+            background-color: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 50px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.light-theme #player-list {
+            background-color: #f8f9fb;
+            border: 1px solid #e0e6ed;
+        }
+
+        .player {
+            background-color: #0f3460;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.light-theme .player {
+            background-color: #dbe4ed;
+            color: #333;
+        }
+
+        .no-players {
+            opacity: 0.7;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: #e94560;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        body.light-theme .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #d32f2f;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #server-icon {
+            display: block;
+            margin: 0 auto 20px;
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        #last-update {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .button {
+            position: relative;
+            width: auto;
+            height: 40px;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            border: none;
+            padding: 0 20px;
+            gap: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            isolation: isolate;
+            z-index: 0;
+            transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            left: -4px;
+            top: -1px;
+            margin: auto;
+            width: calc(100% + 8px);
+            height: 48px;
+            border-radius: 10px;
+            background: linear-gradient(-45deg, #e81cff 0%, #40c9ff 100% );
+            z-index: -1;
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .button::after {
+            content: "";
+            z-index: -2;
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(-45deg, #fc00ff 0%, #00dbde 100% );
+            transform: translate3d(0, 0, 0) scale(0.95);
+            filter: blur(20px);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .button:hover::after {
+            filter: blur(30px);
+        }
+
+        @media (min-width: 601px) {
+            .button:hover::before {
+                transform: rotate(-180deg);
+            }
+        }
+
+        .button:active::before {
+            scale: 0.7;
+        }
+
+        body.light-theme .button {
+            background-color: #fefefe;
+            color: #000;
+            border: 1px solid #dbe6ed;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        body.light-theme .button::before {
+            background: linear-gradient(-45deg, #ffdb3b 0%, #fe53bb 100%);
+        }
+
+        body.light-theme .button::after {
+            background: linear-gradient(-45deg, #ffdb3b 0%, #fe53bb 100%);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+
+        .toggle-details {
+            display: none;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        /* بخش کپی IP */
+        .copy-row .value-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .copy-btn {
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.9rem;
+            padding: 4px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #0f3460;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #1a4a8a;
+        }
+        body.light-theme .copy-btn {
+            background-color: #dde8f0;
+            color: #333;
+        }
+        body.light-theme .copy-btn:hover {
+            background-color: #c8d4de;
+        }
+        
+        /* دکمه تلگرام */
+        .telegram-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+        .Btn {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background-color: transparent;
+            position: relative;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .svgContainer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            backdrop-filter: blur(0px);
+            letter-spacing: 0.8px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            border: 1px solid rgba(156, 156, 156, 0.466);
+        }
+        .svgContainer svg path {
+             fill: #e0e0e0;
+             transition: fill 0.3s;
+        }
+        body.light-theme .svgContainer {
+             border: 1px solid rgba(100, 100, 100, 0.466);
+        }
+        body.light-theme .svgContainer svg path {
+             fill: #333;
+        }
+        .BG {
+            position: absolute;
+            content: "";
+            width: 100%;
+            height: 100%;
+            background: #24a1de;
+            z-index: -1;
+            border-radius: 10px;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+        .Btn:hover .BG {
+            transform: rotate(35deg);
+            transform-origin: bottom;
+        }
+        .Btn:hover .svgContainer {
+            border: 1px solid rgba(226, 226, 226, 0.466);
+            background-color: rgba(204, 204, 204, 0.466);
+            backdrop-filter: blur(4px);
+        }
+        .Btn:hover .svgContainer svg path {
+             fill: white !important;
+        }
+
+
+        /* ریسپانسیو */
+        @media (max-width: 600px) {
+            .status-card {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-top: 30px; /* فاصله از دکمه تلگرام */
+            }
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .value {
+                margin-top: 5px;
+            }
+            .actions {
+                flex-direction: column;
+            }
+            .button {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            .toggle-details {
+                display: flex;
+            }
+            #extra-info {
+                display: none;
+            }
+            #extra-info.visible {
+                display: block;
+            }
+            .button:hover::before {
+                transform: none;
+            }
+            .button:hover::after {
+                filter: blur(20px);
+            }
+            .telegram-link {
+                top: 15px;
+                left: 15px;
+            }
+            .copy-row .value-container {
+                margin-top: 5px;
+                width: 100%;
+                justify-content: space-between;
+            }
+            .copy-row .value {
+                margin-top: 0;
+            }
+        }
+
+        @media (min-width: 601px) {
+            .status-card {
+                max-width: 800px;
+            }
+            .info-row {
+                padding: 20px 0;
+            }
+        }
+    </style>
+</head>
+<body class="">
+    <div class="status-card">
+    
+        <a href="https://t.me/VALHALLA_SMP" target="_blank" class="telegram-link" aria-label="کانال تلگرام">
+            <button class="Btn">
+              <span class="svgContainer">
+                <svg
+                  viewBox="0 0 496 512"
+                  height="1.6em"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M248 8C111 8 0 119 0 256S111 504 248 504 496 393 496 256 385 8 248 8zM363 176.7c-3.7 39.2-19.9 134.4-28.1 178.3-3.5 18.6-10.3 24.8-16.9 25.4-14.4 1.3-25.3-9.5-39.3-18.7-21.8-14.3-34.2-23.2-55.3-37.2-24.5-16.1-8.6-25 5.3-39.5 3.7-3.8 67.1-61.5 68.3-66.7 .2-.7 .3-3.1-1.2-4.4s-3.6-.8-5.1-.5q-3.3 .7-104.6 69.1-14.8 10.2-26.9 9.9c-8.9-.2-25.9-5-38.6-9.1-15.5-5-27.9-7.7-26.8-16.3q.8-6.7 18.5-13.7 108.4-47.2 144.6-62.3c68.9-28.6 83.2-33.6 92.5-33.8 2.1 0 6.6 .5 9.6 2.9a10.5 10.5 0 0 1 3.5 6.7A43.8 43.8 0 0 1 363 176.7z"
+                  ></path>
+                </svg>
+              </span>
+              <span class="BG"></span>
+            </button>
+        </a>
+
+        <h1>وضعیت سرور</h1>
+
+        <img id="server-icon" src="" alt="آیکون سرور" style="display: none;">
+
+        <button class="button toggle-details" onclick="toggleDetails(this)">نمایش جزئیات</button>
+
+        <div id="extra-info">
+            <div class="info-row">
+                <span class="label">وضعیت:</span>
+                <span class="value" id="server-status"><div class="spinner"></div></span>
+            </div>
+            
+            <div class="info-row copy-row">
+                <span class="label">آدرس سرور (IP):</span>
+                <div class="value-container">
+                    <span class="value" id="server-ip"></span>
+                    <button class="copy-btn" onclick="copyIp()">کپی</button>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="label">نسخه سرور:</span>
+                <span class="value" id="server-version"><div class="spinner"></div></span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">پیام روز (MOTD):</span>
+                <span class="value" id="server-motd"><div class="spinner"></div></span>
+            </div>
+        </div>
+
+        <div class="info-row">
+            <span class="label">تعداد بازیکنان:</span>
+            <span class="value" id="player-count"><div class="spinner"></div></span>
+        </div>
+
+        <div>
+            <h3 class="label" style="margin-top: 25px; margin-bottom: 10px;">بازیکنان آنلاین:</h3>
+            <div id="player-list"><div class="spinner"></div></div>
+        </div>
+
+        <div id="last-update"><div class="spinner"></div></div>
+
+        <div class="actions">
+            <button class="button" onclick="fetchServerStatus()">رفرش دستی</button>
+            <button class="button" onclick="toggleTheme()">تغییر تم</button>
+        </div>
+    </div>
+
+    <script>
+        const serverIp = "5.57.37.21:25256";
+        const apiUrl = `https://api.mcsrvstat.us/3/${serverIp}`;
+
+        const statusElement = document.getElementById('server-status');
+        const versionElement = document.getElementById('server-version');
+        const motdElement = document.getElementById('server-motd');
+        const playerCountElement = document.getElementById('player-count');
+        const playerListElement = document.getElementById('player-list');
+        const iconElement = document.getElementById('server-icon');
+        const lastUpdateElement = document.getElementById('last-update');
+        
+        // نمایش IP به محض لود شدن
+        document.getElementById('server-ip').textContent = serverIp;
+
+        async function fetchServerStatus() {
+            const spinnerHtml = '<div class="spinner"></div>';
+            statusElement.innerHTML = spinnerHtml;
+            versionElement.innerHTML = spinnerHtml;
+            motdElement.innerHTML = spinnerHtml;
+            playerCountElement.innerHTML = spinnerHtml;
+            playerListElement.innerHTML = spinnerHtml;
+            lastUpdateElement.innerHTML = spinnerHtml;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                const now = new Date().toLocaleString('fa-IR');
+
+                if (data.online) {
+                    statusElement.innerHTML = 'آنلاین';
+                    statusElement.className = 'value status-online';
+                    versionElement.textContent = data.version || 'نامشخص';
+                    motdElement.innerHTML = data.motd.html ? data.motd.html.join('<br>') : (data.motd.clean ? data.motd.clean.join('<br>') : 'نامشخص');
+                    playerCountElement.textContent = `${data.players.online} / ${data.players.max}`;
+                    
+                    if (data.icon) {
+                        iconElement.src = data.icon;
+                        iconElement.style.display = 'block';
+                    } else {
+                        iconElement.style.display = 'none';
+                    }
+
+                    playerListElement.innerHTML = '';
+                    if (data.players.list && data.players.list.length > 0) {
+                        data.players.list.forEach(player => {
+                            const playerDiv = document.createElement('div');
+                            playerDiv.className = 'player';
+                            playerDiv.textContent = player.name; 
+                            playerListElement.appendChild(playerDiv);
+                        });
+                    } else {
+                        playerListElement.innerHTML = '<span class="no-players">در حال حاضر بازیکنی آنلاین نیست.</span>';
+                    }
+
+                } else {
+                    statusElement.innerHTML = 'آفلاین';
+                    statusElement.className = 'value status-offline';
+                    versionElement.textContent = 'N/A';
+                    motdElement.textContent = 'N/A';
+                    playerCountElement.textContent = 'N/A';
+                    iconElement.style.display = 'none';
+                    playerListElement.innerHTML = '<span class="no-players">سرور در دسترس نیست.</span>';
+                }
+
+                lastUpdateElement.textContent = `آخرین رفرش: ${now}`;
+
+            } catch (error) {
+                statusElement.innerHTML = 'خطا در ارتباط';
+                statusElement.className = 'value status-offline';
+                versionElement.textContent = 'N/A';
+                motdElement.textContent = 'N/A';
+                playerCountElement.textContent = 'N/A';
+                iconElement.style.display = 'none';
+                playerListElement.innerHTML = '<span class="no-players">امکان دریافت اطلاعات وجود نداشت.</span>';
+                lastUpdateElement.textContent = 'خطا در بروزرسانی';
+                console.error("Error fetching server data:", error);
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+        }
+
+        function toggleDetails(btn) {
+            const extra = document.getElementById('extra-info');
+            const isVisible = extra.classList.toggle('visible');
+            
+            if (isVisible) {
+                btn.textContent = 'کمتر';
+            } else {
+                btn.textContent = 'بیشتر';
+            }
+        }
+
+        function copyIp() {
+            navigator.clipboard.writeText(serverIp).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'کپی شد!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        fetchServerStatus();
+        setInterval(fetchServerStatus, 60000);
+    </script>
+</body>
+</html>
